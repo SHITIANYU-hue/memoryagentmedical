@@ -1,0 +1,16 @@
+memory:
+  vector_store: weaviate   # or faiss # 向量数据库(用于“语义检索”)
+  graph_store: neo4j  # 图数据库(选Neo4j，用于“时许事件串联”，比如治疗时间线)
+  weights: # 检索时的“打分权重”(总和建议(1.0))
+    recency: 0.35 # 新鲜度(越新的记录越重要，占35%)
+    trust: 0.35 # 可信度(来源越权威越重要, 比如EHR>患者自述,占35%)
+    priority: 0.20 # 优先级(关键事件，如"手术">常规检查, 占20%)
+    modality: 0.10 # 模态匹配(查询要“影响报告”，就优先影像类记录，占10%)
+  conflict: # 冲突检测规则
+    time_window_days: 30 # 只检测30天内的矛盾数据(老数据可能已过时)
+    value_delta_threshold: 0.20 # 数值型数据（如CEA）变化超20%算冲突
+    arbitration_margin: 0.15 # 仲裁时，top1和tops2的得分差<15%则需人工介入
+  privacy: # 隐私分级策略
+    high:   encrypt:true,  mfa:true # 高敏感(如HIV阳性)：加密+双因素认证
+    medium: encrypt:true,  mfa:false # 中敏感(如高血压)：加密+无需双认证
+    low:    encrypt:false, mfa:false # 低敏感（如用药史）：不加密
