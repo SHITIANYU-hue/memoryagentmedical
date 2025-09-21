@@ -1,0 +1,23 @@
+train:
+  base_model: Qwen2.5-Med-7B # 基础模型（选医疗专用的Qwen2.5-Med）
+  sft_ckpt: checkpoints/sft/epoch-3 # 用SFT微调后的模型继续训练
+  rm_ckpt:  checkpoints/rm/best # ?
+  peft: qlora # 高效微调方法（不用训整个模型，只训部分参数）
+  bf16: true
+  batch_size: 2
+  grad_accum: 16
+  lr: 1.5e-5
+  max_steps: 20000
+  clip_grad_norm: 1.0
+  rollout:
+    max_new_tokens: 512
+    temperature: 0.7
+  reward: # 奖励函数权重（分数越高越重要）
+    coeff_accuracy: 1.0 # 回答准确性（最重要，占1.0）
+    coeff_consistency: 0.5 # 与患者记忆的一致性（避免矛盾，占0.5）
+    coeff_safety: 1.5 # 安全性（不胡说八道，占1.5，比准确更重要！）
+    penalty_conflict: 1.0 # 冲突惩罚（回答与记忆冲突扣1.0分）
+    penalty_privacy: 2.0 # 隐私惩罚（泄露敏感数据扣2.0分，最重！）
+  safety:
+    med_guideline_gate: true # 启用临床指南校验（回答必须符合指南）
+    allow_drug_dose_output: false # gated by clinician review # 禁止输出用药剂量（需医生审核）
